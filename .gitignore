@@ -27,4 +27,3 @@ dist-ssr
 
 # Vite PWA dev output
 dev-dist/
-*.json
