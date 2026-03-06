@@ -1,0 +1,187 @@
+[1mdiff --git a/src/components/org-admin-components/skills-academics-components/TopicModal.jsx b/src/components/org-admin-components/skills-academics-components/TopicModal.jsx[m
+[1mindex 869d5c4..6464cc6 100644[m
+[1m--- a/src/components/org-admin-components/skills-academics-components/TopicModal.jsx[m
+[1m+++ b/src/components/org-admin-components/skills-academics-components/TopicModal.jsx[m
+[36m@@ -1,4 +1,7 @@[m
+ import React, { useState, useEffect } from 'react';[m
+[32m+[m[32mimport { useSelector } from 'react-redux';[m
+[32m+[m[32mimport { getRequest } from '../../../api/apiRequests';[m
+[32m+[m[32mimport { toast } from 'react-hot-toast';[m
+ [m
+ const TopicModal = ({[m
+   isOpen,[m
+[36m@@ -6,10 +9,8 @@[m [mconst TopicModal = ({[m
+   onSubmit,[m
+   formData,[m
+   setFormData,[m
+[31m-  subjects,[m
+   classes,[m
+   sections,[m
+[31m-  departments,[m
+   jobs,[m
+   editingTopic,[m
+   isLoading,[m
+[36m@@ -20,12 +21,63 @@[m [mconst TopicModal = ({[m
+   hideJobSelection[m
+ }) => {[m
+   const [errors, setErrors] = useState({});[m
+[32m+[m[32m  const [departments, setDepartments] = useState([]);[m
+[32m+[m[32m  const [subjects, setSubjects] = useState([]);[m
+[32m+[m[32m  const [isLoadingDepartments, setIsLoadingDepartments] = useState(false);[m
+[32m+[m[32m  const [isLoadingSubjects, setIsLoadingSubjects] = useState(false);[m
+[32m+[m[41m  [m
+[32m+[m[32m  // Get organization from Redux[m
+[32m+[m[32m  const organization = useSelector((state) => state.organization);[m
+[32m+[m
+[32m+[m[32m  const fetchDepartments = async () => {[m
+[32m+[m[32m    if (!organization?._id) return;[m
+[32m+[m[41m    [m
+[32m+[m[32m    try {[m
+[32m+[m[32m      setIsLoadingDepartments(true);[m
+[32m+[m[32m      const response = await getRequest([m
+[32m+[m[32m        `/organization-setup/departments/${organization._id}`[m
+[32m+[m[32m      );[m
+[32m+[m
+[32m+[m[32m      if (response.data.success) {[m
+[32m+[m[32m        setDepartments(response.data.data);[m
+[32m+[m[32m      }[m
+[32m+[m[32m    } catch (error) {[m
+[32m+[m[32m      console.error('Error fetching departments:', error);[m
+[32m+[m[32m      toast.error('Failed to fetch departments');[m
+[32m+[m[32m    } finally {[m
+[32m+[m[32m      setIsLoadingDepartments(false);[m
+[32m+[m[32m    }[m
+[32m+[m[32m  };[m
+[32m+[m
+[32m+[m[32m  const fetchSubjects = async (departmentId = null) => {[m
+[32m+[m[32m    if (!organization?._id) return;[m
+[32m+[m[41m    [m
+[32m+[m[32m    try {[m
+[32m+[m[32m      setIsLoadingSubjects(true);[m
+[32m+[m[32m      if (departmentId) {[m
+[32m+[m[32m        const response = await getRequest([m
+[32m+[m[32m          `/organization-setup/subjects/${organization._id}/${departmentId}`[m
+[32m+[m[32m        );[m
+[32m+[m[32m        if (response.data.success) {[m
+[32m+[m[32m          setSubjects(response.data.data);[m
+[32m+[m[32m        }[m
+[32m+[m[32m      } else {[m
+[32m+[m[32m        setSubjects([]);[m
+[32m+[m[32m      }[m
+[32m+[m[32m    } catch (error) {[m
+[32m+[m[32m      console.error('Error fetching subjects:', error);[m
+[32m+[m[32m      toast.error('Failed to fetch subjects');[m
+[32m+[m[32m    } finally {[m
+[32m+[m[32m      setIsLoadingSubjects(false);[m
+[32m+[m[32m    }[m
+[32m+[m[32m  };[m
+ [m
+   useEffect(() => {[m
+     if (isOpen) {[m
+       setErrors({});[m
+[32m+[m[32m      fetchDepartments();[m
+     }[m
+[31m-  }, [isOpen]);[m
+[32m+[m[32m  }, [isOpen, organization?._id]);[m
+ [m
+   const validateForm = () => {[m
+     const newErrors = {};[m
+[36m@@ -34,10 +86,6 @@[m [mconst TopicModal = ({[m
+       newErrors.title = 'Topic title is required';[m
+     }[m
+ [m
+[31m-    if (!formData.description.trim()) {[m
+[31m-      newErrors.description = 'Topic description is required';[m
+[31m-    }[m
+[31m-[m
+     if (!formData.departmentId) {[m
+       newErrors.departmentId = 'Please select a department';[m
+     }[m
+[36m@@ -46,18 +94,6 @@[m [mconst TopicModal = ({[m
+       newErrors.subjectId = 'Please select a subject';[m
+     }[m
+ [m
+[31m-    if (!formData.classId) {[m
+[31m-      newErrors.classId = 'Please select a class';[m
+[31m-    }[m
+[31m-[m
+[31m-    if (!formData.sectionIds || formData.sectionIds.length === 0) {[m
+[31m-      newErrors.sectionIds = 'Please select at least one section';[m
+[31m-    }[m
+[31m-[m
+[31m-    if (!formData.estimatedTime.trim()) {[m
+[31m-      newErrors.estimatedTime = 'Estimated time is required';[m
+[31m-    }[m
+[31m-[m
+     setErrors(newErrors);[m
+     return Object.keys(newErrors).length === 0;[m
+   };[m
+[36m@@ -76,36 +112,19 @@[m [mconst TopicModal = ({[m
+     }[m
+   };[m
+ [m
+[31m-  const handleSectionToggle = (sectionId) => {[m
+[31m-    const currentSections = formData.sectionIds || [];[m
+[31m-    const newSections = currentSections.includes(sectionId)[m
+[31m-      ? currentSections.filter(id => id !== sectionId)[m
+[31m-      : [...currentSections, sectionId];[m
+[31m-    [m
+[31m-    setFormData(prev => ({ ...prev, sectionIds: newSections }));[m
+[31m-    if (errors.sectionIds) {[m
+[31m-      setErrors(prev => ({ ...prev, sectionIds: '' }));[m
+[31m-    }[m
+[31m-  };[m
+[31m-[m
+   const handleDepartmentChange = (departmentId) => {[m
+[31m-    setFormData(prev => ({ ...prev, departmentId, classId: '', sectionIds: [] }));[m
+[32m+[m[32m    setFormData(prev => ({ ...prev, departmentId, subjectId: '' }));[m
+     if (errors.departmentId) {[m
+       setErrors(prev => ({ ...prev, departmentId: '' }));[m
+     }[m
+[31m-  };[m
+[31m-[m
+[31m-  const handleClassChange = (classId) => {[m
+[31m-    setFormData(prev => ({ ...prev, classId, sectionIds: [] }));[m
+[31m-    if (errors.classId) {[m
+[31m-      setErrors(prev => ({ ...prev, classId: '' }));[m
+[31m-    }[m
+[32m+[m[32m    // Fetch subjects for the selected department[m
+[32m+[m[32m    fetchSubjects(departmentId);[m
+   };[m
+ [m
+   if (!isOpen) return null;[m
+ [m
+   return ([m
+[31m-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">[m
+[32m+[m[32m    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">[m
+       <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">[m
+         <div className="p-6 border-b border-slate-200">[m
+           <div className="flex items-center justify-between">[m
+[36m@@ -114,7 +133,7 @@[m [mconst TopicModal = ({[m
+                 {editingTopic ? 'Edit Topic' : 'Create New Topic'}[m
+               </h2>[m
+               <p className="text-slate-500 text-sm mt-1">[m
+[31m-                {editingTopic ? 'Update topic information' : 'Define a new topic by selecting class, subject, and multiple sections'}[m
+[32m+[m[32m                {editingTopic ? 'Update topic information' : 'Create a topic by selecting department and subject, then setting difficulty'}[m
+               </p>[m
+             </div>[m
+             <button[m
+[36m@@ -145,181 +164,117 @@[m [mconst TopicModal = ({[m
+ [m
+             <div className="md:col-span-2">[m
+               <label className="block text-sm font-medium text-slate-700 mb-2">[m
+[31m-                Description *[m
+[32m+[m[32m                Description[m
+               </label>[m
+               <textarea[m
+                 value={formData.description}[m
+                 onChange={(e) => handleInputChange('description', e.target.value)}[m
+                 className={`${inputBaseClass} h-20 resize-none ${errors.description ? 'border-red-300 focus:ring-red-500' : ''}`}[m
+[31m-                placeholder="Describe what this topic covers"[m
+[32m+[m[32m                placeholder="Describe what this topic covers (optional)"[m
+               />[m
+               {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}[m
+             </div>[m
+ [m
+[31m-            <div>[m
+[31m-              <label className="block text-sm fon

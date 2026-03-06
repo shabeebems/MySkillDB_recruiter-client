@@ -1,0 +1,18 @@
+{
+  "projects": {
+    "default": "my-skill-extractor-app"
+  },
+  "targets": {
+    "my-skill-extractor-app": {
+      "hosting": {
+        "staging": [
+          "myskilldb-staging"
+        ],
+        "production": [
+          "myskilldb-production"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
