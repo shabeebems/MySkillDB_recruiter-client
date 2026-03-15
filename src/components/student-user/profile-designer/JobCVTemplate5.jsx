@@ -201,9 +201,11 @@ const JobCVTemplate5 = ({ cv }) => {
                           {proj.type}
                         </p>
                       </div>
-                      <p className="text-xs text-slate-600 font-medium whitespace-nowrap text-left">
-                        {proj.startDate} - {proj.endDate}
-                      </p>
+                      {(proj.startDate || proj.endDate) && (
+                        <p className="text-xs text-slate-600 font-medium whitespace-nowrap text-left">
+                          {proj.startDate} - {proj.endDate}
+                        </p>
+                      )}
                     </div>
                     <p className="text-sm text-slate-700 leading-relaxed mt-2 text-left">
                       {proj.description}
