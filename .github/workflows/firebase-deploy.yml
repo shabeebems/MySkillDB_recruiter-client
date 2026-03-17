@@ -3,24 +3,21 @@ name: Deploy to Firebase (Production)
 on:
   push:
     branches:
-      - Production  
+      - Production
 
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: npm install
+      - run: npm install
+      - run: npm run build
 
-      - name: Build project
-        run: npm run build
+      - run: npm install -g firebase-tools
 
-      - name: Install Firebase CLI
-        run: npm install -g firebase-tools
-
-      - name: Deploy to Firebase Hosting
-        run: firebase deploy --only hosting --token "$FIREBASE_TOKEN"
+      - name: Deploy
+        run: firebase deploy --only hosting --project my-skilldb-rec --token "$FIREBASE_TOKEN"
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
