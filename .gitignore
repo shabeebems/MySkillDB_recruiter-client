@@ -27,3 +27,4 @@ dist-ssr
 
 # Vite PWA dev output
 dev-dist/
+.firebase
