@@ -251,9 +251,21 @@ function Login() {
           console.warn("Unknown role:", userData.role);
         }
       } else {
+        console.error("Login failed response:", {
+          message: data?.message,
+          success: data?.success,
+          data: data?.data,
+          fullResponse: data,
+        });
         setErrorMessage(data.message || "Login failed. Please try again.");
       }
     } catch (err) {
+      console.error("Login request error:", {
+        message: err?.message,
+        status: err?.response?.status,
+        responseData: err?.response?.data,
+        fullError: err,
+      });
       setErrorMessage(
         err.response?.data?.message || "Something went wrong. Please try again."
       );
