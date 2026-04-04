@@ -41,12 +41,22 @@ const StudentJobsList = ({
                 {/* Header Row */}
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5">
+                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                       <h4 className={`font-semibold text-base tracking-tight ${
                         isActive ? 'text-slate-900' : 'text-slate-500'
                       }`}>
                         {job.title || job.name}
                       </h4>
+                      {job.isJobYouCreated && (
+                        <span
+                          className="inline-flex items-center gap-1 text-[10px] text-slate-500"
+                          title="You added this job"
+                          aria-label="You added this job"
+                        >
+                          <i className="fas fa-user-edit text-[9px] text-slate-400" aria-hidden />
+                          <span>You added this</span>
+                        </span>
+                      )}
                       {activeTab === "my" && job.applicationStatus && (
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
                           job.applicationStatus === 'accepted' 

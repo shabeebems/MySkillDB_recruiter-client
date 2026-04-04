@@ -1593,7 +1593,15 @@ const InterviewPlanner = () => {
                           </div>
                           <div className="min-w-0 flex-1">
                             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-neutral-900 mb-1.5 tracking-tight">Skills to Master</h1>
-                            <p className="text-sm sm:text-base text-neutral-600 font-medium truncate">{viewingJob.title} - {viewingJob.company}</p>
+                            <p className="text-sm sm:text-base text-neutral-600 font-medium truncate">
+                              {viewingJob.title} - {viewingJob.company}
+                              {viewingJob.isJobYouCreated && (
+                                <span className="ml-2 inline-flex items-center gap-1 text-[10px] text-neutral-500 font-normal">
+                                  <i className="fas fa-user-edit text-neutral-400 text-[9px]" aria-hidden />
+                                  You added this
+                                </span>
+                              )}
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-4 flex-wrap mt-4">

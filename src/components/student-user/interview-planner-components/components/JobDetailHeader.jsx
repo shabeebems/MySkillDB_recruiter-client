@@ -21,6 +21,16 @@ const JobDetailHeader = ({
             <h1 className="text-lg sm:text-3xl lg:text-4xl font-semibold text-neutral-900 mb-1.5 tracking-tight truncate">
               {job.title}
             </h1>
+            {job.isJobYouCreated && (
+              <p
+                className="mb-1.5 inline-flex items-center gap-1.5 text-xs font-normal text-neutral-500"
+                title="You added this job"
+                aria-label="You added this job"
+              >
+                <i className="fas fa-user-edit text-neutral-400" aria-hidden />
+                <span>You added this job</span>
+              </p>
+            )}
             <p className="text-sm sm:text-base text-neutral-600 font-medium truncate">{job.company}</p>
           </div>
           <div className="mt-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">

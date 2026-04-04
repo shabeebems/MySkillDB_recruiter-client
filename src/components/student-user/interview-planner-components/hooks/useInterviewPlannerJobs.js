@@ -23,6 +23,13 @@ export const useInterviewPlannerJobs = (userId) => {
             const jobData = plannerEntry.jobId || {};
             const validId = jobId || plannerEntry._id || `job-${index}`;
 
+            const createdBy = jobData.createdByStudentId;
+            const isJobYouCreated = !!(
+              createdBy &&
+              userId &&
+              String(createdBy) === String(userId)
+            );
+
             return {
               _id: validId,
               jobId: jobId || validId,
@@ -31,7 +38,8 @@ export const useInterviewPlannerJobs = (userId) => {
               company: jobData.companyName || 'Company',
               salary: jobData.salaryRange || jobData.salary,
               location: jobData.place || jobData.location,
-              skills: []
+              skills: [],
+              isJobYouCreated,
             };
           })
           .filter(job => job._id);
