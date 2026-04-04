@@ -45,7 +45,21 @@ const JobCard = ({ job, onViewDetails, onOpenChatbot, onDelete }) => {
             <h2 className="text-base sm:text-lg font-bold text-neutral-900 tracking-tight truncate">
               {job.title}
             </h2>
-            <p className="text-xs sm:text-sm text-neutral-500 font-medium flex items-center gap-1.5 truncate">
+            {job.isJobYouCreated && (
+              <span
+                className="mt-1 inline-flex items-center gap-1 text-[10px] text-neutral-500"
+                title="You added this job"
+                aria-label="You added this job"
+              >
+                <i className="fas fa-user-edit text-[9px] text-neutral-400" aria-hidden />
+                <span>You added this</span>
+              </span>
+            )}
+            <p
+              className={`text-xs sm:text-sm text-neutral-500 font-medium flex items-center gap-1.5 truncate ${
+                job.isJobYouCreated ? 'mt-1' : ''
+              }`}
+            >
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" aria-hidden />
               {job.company}
             </p>

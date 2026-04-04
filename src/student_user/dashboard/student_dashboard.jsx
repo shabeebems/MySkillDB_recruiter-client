@@ -296,10 +296,17 @@ const StudentDashboard = () => {
         if (response.data?.success && response.data?.data) {
           const interviewPlanners = response.data.data.map((sp) => {
             const job = sp.jobId || {};
+            const createdBy = job.createdByStudentId;
+            const isJobYouCreated = !!(
+              createdBy &&
+              user?._id &&
+              String(createdBy) === String(user._id)
+            );
             return {
               id: sp._id,
               company: job.companyName || 'Company',
               title: job.name || 'Job Title',
+              isJobYouCreated,
             };
           });
           setInterviewPlannerJobs(interviewPlanners);
@@ -944,6 +951,12 @@ const StudentDashboard = () => {
                   >
                     <div className="mb-3 md:mb-4">
                       <h4 className="text-sm font-bold text-slate-900 truncate mb-1">{job.title}</h4>
+                      {job.isJobYouCreated && (
+                        <p className="text-[10px] text-slate-500 mb-1 inline-flex items-center gap-1">
+                          <i className="fas fa-user-edit text-slate-400 text-[9px]" aria-hidden />
+                          <span>You added this</span>
+                        </p>
+                      )}
                       <p className="text-xs text-slate-500 truncate">{job.company}</p>
                       </div>
                     

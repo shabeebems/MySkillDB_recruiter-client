@@ -3,7 +3,18 @@ import toast from 'react-hot-toast';
 import { parseJobPosting, extractSkills } from '../../../api/api';
 import { getRequest, postRequest } from '../../../api/apiRequests';
 
-const JobParserModal = ({ isOpen, onClose, onBack, organizationId, prefilledCompany = null, allowedDepartmentId = null }) => {
+const sameDeptId = (a, b) => String(a ?? '') === String(b ?? '');
+
+const JobParserModal = ({
+  isOpen,
+  onClose,
+  onBack,
+  organizationId,
+  prefilledCompany = null,
+  allowedDepartmentId = null,
+  /** When department list API fails (e.g. student): { _id, name } from assignment — job uses this department */
+  prefilledDepartment = null,
+}) => {
   const [step, setStep] = useState(0); // 0: Company, 1: Paste, 2: Review, 3: Skills Results
   const [isLoading, setIsLoading] = useState(false);
   const [departments, setDepartments] = useState([]);
@@ -158,38 +169,72 @@ const JobParserModal = ({ isOpen, onClose, onBack, organizationId, prefilledComp
     [isOpen, step, organizationId]
   );
 
+  /** Single department when UI is restricted to one (student / HOD); used if API fails or returns nothing */
+  const lockedDepartmentFallback = useMemo(() => {
+    if (!allowedDepartmentId) return null;
+    const id = prefilledDepartment?._id ?? allowedDepartmentId;
+    const name = (prefilledDepartment?.name && String(prefilledDepartment.name).trim()) || 'My department';
+    return { _id: id, name };
+  }, [allowedDepartmentId, prefilledDepartment?._id, prefilledDepartment?.name]);
+
   useEffect(() => {
     const fetchDepartments = async () => {
       if (!shouldLoadDepartments) return;
+
+      const fallback = lockedDepartmentFallback;
+
+      // Seed immediately so students are not blocked if /organization-setup/departments fails (403/network)
+      if (fallback) {
+        setDepartments([fallback]);
+        setSelectedDepartments([fallback]);
+      }
+
       try {
         setIsDeptLoading(true);
         const response = await getRequest(`/organization-setup/departments/${organizationId}`);
         let data = response.data?.data ?? [];
-        
-        // HOD Restriction: Filter to only allowed department
+
         if (allowedDepartmentId) {
-          data = data.filter(dept => dept._id === allowedDepartmentId);
+          data = data.filter((dept) => sameDeptId(dept._id, allowedDepartmentId));
         }
-        
-        setDepartments(data);
-        if (data.length === 0) {
+
+        if (data.length > 0) {
+          setDepartments(data);
+          if (data.length === 1) {
+            setSelectedDepartments([data[0]]);
+          } else if (allowedDepartmentId) {
+            const match = data.find((d) => sameDeptId(d._id, allowedDepartmentId));
+            if (match) setSelectedDepartments([match]);
+          }
+        } else if (fallback) {
+          setDepartments([fallback]);
+          setSelectedDepartments([fallback]);
+        } else {
+          setDepartments([]);
           setSelectedDepartments([]);
-        } else if (allowedDepartmentId && data.length === 1) {
-          // Auto-select the only department for HOD
-          setSelectedDepartments([data[0]]);
         }
       } catch (error) {
         console.error('Error fetching departments:', error);
-        toast.error('Failed to load departments');
-        setDepartments([]);
-        setSelectedDepartments([]);
+        if (fallback) {
+          setDepartments([fallback]);
+          setSelectedDepartments([fallback]);
+        } else {
+          toast.error('Failed to load departments');
+          setDepartments([]);
+          setSelectedDepartments([]);
+        }
       } finally {
         setIsDeptLoading(false);
       }
     };
 
     fetchDepartments();
-  }, [shouldLoadDepartments, organizationId, allowedDepartmentId]);
+  }, [
+    shouldLoadDepartments,
+    organizationId,
+    allowedDepartmentId,
+    lockedDepartmentFallback,
+  ]);
 
   // Step 1: Parse job posting
   const handleParseJob = async (e) => {
@@ -505,9 +550,9 @@ const JobParserModal = ({ isOpen, onClose, onBack, organizationId, prefilledComp
   const DepartmentMultiSelect = ({ departments, selectedDepartments, onChange, disabled }) => {
     const handleToggle = (dept) => {
       if (disabled) return;
-      const isSelected = selectedDepartments.some(d => d._id === dept._id);
+      const isSelected = selectedDepartments.some((d) => sameDeptId(d._id, dept._id));
       if (isSelected) {
-        onChange(selectedDepartments.filter(d => d._id !== dept._id));
+        onChange(selectedDepartments.filter((d) => !sameDeptId(d._id, dept._id)));
       } else {
         onChange([...selectedDepartments, dept]);
       }
@@ -573,10 +618,10 @@ const JobParserModal = ({ isOpen, onClose, onBack, organizationId, prefilledComp
         <div className="p-4 max-h-60 overflow-y-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {departments.map(dept => {
-              const isSelected = selectedDepartments.some(d => d._id === dept._id);
+              const isSelected = selectedDepartments.some((d) => sameDeptId(d._id, dept._id));
               return (
                 <div
-                  key={dept._id}
+                  key={String(dept._id)}
                   onClick={() => handleToggle(dept)}
                   className={`px-4 py-3 cursor-pointer flex items-center gap-3 hover:bg-slate-50 transition-colors rounded-lg border-2 ${
                     isSelected 
@@ -959,7 +1004,7 @@ const JobParserModal = ({ isOpen, onClose, onBack, organizationId, prefilledComp
                         departments={departments} 
                         selectedDepartments={selectedDepartments} 
                         onChange={setSelectedDepartments}
-                        disabled={isDeptLoading || departments.length === 0}
+                        disabled={departments.length === 0}
                       />
                     ) : (
                       <p className="text-sm text-slate-600">

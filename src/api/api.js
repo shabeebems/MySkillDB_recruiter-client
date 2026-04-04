@@ -6,18 +6,15 @@
  * defined by VITE_SERVER_API_URL (which is currently http://localhost:8000).
  */
 
-// Local backend proxy URL: Now points to the unified backend server's new /api/ai route
-const BACKEND_URL = `${import.meta.env.VITE_SERVER_API_URL || 'http://localhost:8000'}/api/ai/parse-job`; 
+import { postRequest } from './apiRequests';
 
 /**
- * Call the Integrated Backend for Vertex AI
+ * Call the Integrated Backend for Vertex AI (uses authenticated /api/ai/parse-job)
  * @param {string} prompt - The prompt to send to the backend
  * @param {number} maxRetries - Maximum number of retry attempts (default: 3)
  * @returns {Promise<{success: boolean, data: any, error: string|null}>}
  */
 export const callGeminiAPI = async (prompt, maxRetries = 3) => {
-  // Key check removed: We rely on the backend to be running and authenticated.
-  
   const payload = { prompt: prompt };
 
   let attempt = 0;
@@ -27,22 +24,15 @@ export const callGeminiAPI = async (prompt, maxRetries = 3) => {
     attempt++;
 
     try {
-      const response = await fetch(BACKEND_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
+      const response = await postRequest('ai/parse-job', payload);
       const httpCode = response.status;
-      const result = await response.json();
+      const result = response.data;
       
       // Check for successful response from the integrated backend
       if (httpCode >= 200 && httpCode < 300 && result.success) {
         // The backend handles the complex API interaction and JSON parsing
         return { success: true, data: result.data, error: null };
-      } else if (httpCode === 503 || (httpCode === 500 && result.error.includes('VERTEX_AI_FAILURE'))) {
+      } else if (httpCode === 503 || (httpCode === 500 && result.error?.includes?.('VERTEX_AI_FAILURE'))) {
         // Retry on service unavailability (503 status code or custom error code from backend)
         if (attempt < maxRetries) {
           console.warn(`Backend/API Error (Attempt ${attempt}). Retrying in ${waitTime} seconds...`);
@@ -59,16 +49,36 @@ export const callGeminiAPI = async (prompt, maxRetries = 3) => {
         };
       }
     } catch (error) {
+      const status = error.response?.status;
+      const result = error.response?.data;
+      if (
+        status === 503 ||
+        (status === 500 && result?.error?.includes?.('VERTEX_AI_FAILURE'))
+      ) {
+        if (attempt < maxRetries) {
+          console.warn(`Backend/API Error (Attempt ${attempt}). Retrying in ${waitTime} seconds...`);
+          await new Promise((resolve) => setTimeout(resolve, waitTime * 1000));
+          waitTime *= 2;
+          continue;
+        }
+      }
+      if (status === 401 || status === 403) {
+        return {
+          success: false,
+          data: result?.message || result,
+          error: result?.message || 'Please log in to use AI features.',
+        };
+      }
       if (attempt < maxRetries) {
         console.error(`Request Error to Backend (Attempt ${attempt}):`, error);
-        await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
+        await new Promise((resolve) => setTimeout(resolve, waitTime * 1000));
         waitTime *= 2;
         continue;
       }
       return {
         success: false,
         data: null,
-        error: `Network Error: Could not connect to backend on ${BACKEND_URL}. Ensure your main server is running.`
+        error: `Network Error: Could not reach the AI parse endpoint. Ensure your main server is running and you are logged in.`,
       };
     }
   }

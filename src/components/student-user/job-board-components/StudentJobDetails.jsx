@@ -118,6 +118,16 @@ const StudentJobContent = ({
         <div className="mb-5">
           <h1 className="text-2xl font-semibold text-slate-900 tracking-tight mb-2">
             {selectedJob.title || selectedJob.name}
+            {selectedJob.isJobYouCreated && (
+              <span
+                className="mt-2 inline-flex items-center gap-1.5 text-xs font-normal text-slate-500 tracking-normal"
+                title="You added this job"
+                aria-label="You added this job"
+              >
+                <i className="fas fa-user-edit text-slate-400" aria-hidden />
+                <span>You added this job</span>
+              </span>
+            )}
             {activeTab === "my" && selectedJob.applicationStatus && (
               <span className={`ml-3 px-2.5 py-1 rounded-full text-xs font-semibold ${
                 selectedJob.applicationStatus === 'accepted' 
@@ -179,34 +189,35 @@ const StudentJobContent = ({
               View Video
             </button>
           )}
-          {isJobApplied ? (
-            <div className="px-4 py-2 bg-green-50 border border-green-200 text-green-700 rounded-xl font-medium text-sm flex items-center gap-2">
-              <i className="fas fa-check-circle"></i>
-              Applied
-            </div>
-          ) : (
-            <button
-              onClick={() => onApplyForJob(selectedJob)}
-              disabled={isApplying}
-              className={`px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 active:scale-95 flex items-center gap-2 ${
-                isApplying
-                  ? 'bg-blue-400 text-white cursor-not-allowed opacity-60'
-                  : 'bg-blue-600 hover:bg-blue-500 text-white'
-              }`}
-            >
-              {isApplying ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Applying...
-                </>
-              ) : (
-                <>
-                  <i className="fas fa-external-link-alt text-xs"></i>
-                  Apply Now
-                </>
-              )}
-            </button>
-          )}
+          {!selectedJob.isJobYouCreated &&
+            (isJobApplied ? (
+              <div className="px-4 py-2 bg-green-50 border border-green-200 text-green-700 rounded-xl font-medium text-sm flex items-center gap-2">
+                <i className="fas fa-check-circle"></i>
+                Applied
+              </div>
+            ) : (
+              <button
+                onClick={() => onApplyForJob(selectedJob)}
+                disabled={isApplying}
+                className={`px-4 py-2 rounded-xl font-medium text-sm transition-all duration-200 active:scale-95 flex items-center gap-2 ${
+                  isApplying
+                    ? 'bg-blue-400 text-white cursor-not-allowed opacity-60'
+                    : 'bg-blue-600 hover:bg-blue-500 text-white'
+                }`}
+              >
+                {isApplying ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Applying...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-external-link-alt text-xs"></i>
+                    Apply Now
+                  </>
+                )}
+              </button>
+            ))}
           
           {isJobInInterviewPlanner ? (
             <div className="px-4 py-2 bg-green-50 border border-green-200 text-green-700 rounded-xl font-medium text-sm flex items-center gap-2">
