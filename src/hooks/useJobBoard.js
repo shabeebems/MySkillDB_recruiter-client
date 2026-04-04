@@ -101,6 +101,12 @@ export function useJobBoard() {
         }
       }
 
+      const createdBy = jobData.createdByStudentId;
+      const isJobYouCreated = !!(
+        createdBy &&
+        user?._id &&
+        String(createdBy) === String(user._id)
+      );
       const detailedJob = {
         _id: jobData._id,
         title: jobData.name || jobData.title || job.title,
@@ -117,6 +123,9 @@ export function useJobBoard() {
         skills: skills.length ? skills : (jobData.skills || []),
         salaryRange: jobData.salaryRange || job.salaryRange || 'Not specified',
         jobPostingLink: jobData.jobPostingLink || jobData.externalLink || job.jobPostingLink || '#',
+        isActive: jobData.isActive !== false,
+        createdByStudentId: createdBy ? String(createdBy) : null,
+        isJobYouCreated,
       };
       setSelectedJob(detailedJob);
 
@@ -177,7 +186,9 @@ export function useJobBoard() {
       const res = await getRequest(`/jobs/organization/${user.organizationId}?${params}`);
       const responseData = res?.data?.success && res.data?.data ? res.data.data : null;
       const apiJobs = Array.isArray(responseData) ? responseData : (responseData?.jobs || []);
-      const list = apiJobs.map((j) => formatJobFromApi(j, assignment.departmentId));
+      const list = apiJobs.map((j) =>
+        formatJobFromApi(j, assignment.departmentId, user?._id)
+      );
       setJobs(list);
       if (responseData?.pagination) {
         setJobsPagination({
@@ -194,7 +205,7 @@ export function useJobBoard() {
       setJobs([]);
       setJobsPagination(DEFAULT_PAGINATION);
     }
-  }, [user?.organizationId, assignment?.departmentId]);
+  }, [user?.organizationId, user?._id, assignment?.departmentId]);
 
   const getFilteredJobs = useCallback(() => {
     if (activeTab === 'my') {

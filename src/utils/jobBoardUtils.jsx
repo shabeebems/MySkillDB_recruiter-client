@@ -6,8 +6,18 @@ import React from 'react';
 
 const DEFAULT_DEPARTMENT_ID = null;
 
-export function formatJobFromApi(job, departmentId = DEFAULT_DEPARTMENT_ID) {
+export function formatJobFromApi(
+  job,
+  departmentId = DEFAULT_DEPARTMENT_ID,
+  currentUserId = null
+) {
   if (!job) return null;
+  const createdBy = job.createdByStudentId;
+  const isJobYouCreated = !!(
+    createdBy &&
+    currentUserId &&
+    String(createdBy) === String(currentUserId)
+  );
   return {
     _id: job._id,
     title: job.name || job.title,
@@ -26,6 +36,8 @@ export function formatJobFromApi(job, departmentId = DEFAULT_DEPARTMENT_ID) {
     salaryRange: job.salaryRange || 'Not specified',
     jobPostingLink: job.jobPostingLink || job.externalLink || '#',
     isActive: job.isActive !== false,
+    createdByStudentId: createdBy ? String(createdBy) : null,
+    isJobYouCreated,
   };
 }
 
